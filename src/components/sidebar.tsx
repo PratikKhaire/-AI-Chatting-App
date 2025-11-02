@@ -75,7 +75,7 @@ export function Sidebar({
           ) : (
             Object.entries(groupedSessions).map(([label, groupSessions]) => (
               <div key={label} className="space-y-1.5">
-                <h3 className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-widest gradient-text">
+                <h3 className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   {label}
                 </h3>
                 <div className="space-y-1">

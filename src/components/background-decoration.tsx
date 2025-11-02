@@ -2,7 +2,7 @@
 
 export function BackgroundDecoration() {
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-40">
       {/* Animated SVG Lines */}
       <svg
         className="absolute inset-0 w-full h-full"
@@ -101,9 +101,9 @@ export function BackgroundDecoration() {
       </svg>
 
       {/* Gradient orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-purple-200/30 via-blue-200/20 to-transparent rounded-full blur-3xl animate-pulse-slow" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-200/30 via-purple-200/20 to-transparent rounded-full blur-3xl animate-pulse-medium" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-purple-100/20 via-pink-100/10 to-transparent rounded-full blur-3xl animate-pulse-fast" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-linear-to-br from-purple-200/30 via-blue-200/20 to-transparent rounded-full blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-linear-to-br from-blue-200/30 via-purple-200/20 to-transparent rounded-full blur-3xl animate-pulse-medium" style={{ animationDelay: '1.5s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-linear-to-br from-purple-100/20 via-pink-100/10 to-transparent rounded-full blur-3xl animate-pulse-fast" style={{ animationDelay: '0.5s' }} />
     </div>
   );
 }

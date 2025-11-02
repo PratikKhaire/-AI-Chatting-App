@@ -87,6 +87,15 @@ export function useChatSessionState() {
           session.id === activeSessionId ? updatedSession : session
         )
       );
+    } else {
+      // If no active session, create one automatically
+      const newSession: ChatSession = {
+        id: Date.now().toString(),
+        title: 'New Chat',
+        messages: [message],
+      };
+      setSessions((prevSessions) => [...prevSessions, newSession]);
+      setActiveSessionId(newSession.id);
     }
   };
 
