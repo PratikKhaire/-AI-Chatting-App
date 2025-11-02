@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 const mockData = [
   'next.js', 'react', 'typescript', 'tailwindcss', 'shadcn/ui',
-  'react query', 'javascript', 'html', 'css', 'web development'
+  'react query', 'javascript', 'html', 'css', 'web development',
+  'components', 'hooks', 'api routes', 'typescript', 'javascript',
+  'react hooks', 'context api', 'usestate', 'useeffect', 'custom hooks'
 ];
 
 export async function GET(request: Request) {
@@ -13,7 +15,9 @@ export async function GET(request: Request) {
     return NextResponse.json([]);
   }
 
-  const results = mockData.filter(item => item.toLowerCase().includes(query.toLowerCase()));
+  const results = mockData
+    .filter(item => item.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 10); // Limit results to 10
 
   return NextResponse.json(results);
 }

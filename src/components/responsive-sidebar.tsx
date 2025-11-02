@@ -12,6 +12,7 @@ interface ResponsiveSidebarProps {
   activeSession: ChatSession | undefined;
   createNewSession: () => void;
   switchSession: (sessionId: string) => void;
+  clearHistory?: () => void;
 }
 
 export function ResponsiveSidebar(props: ResponsiveSidebarProps) {

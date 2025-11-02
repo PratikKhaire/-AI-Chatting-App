@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState, useRef, useMemo } from "react";
-import { Input } from "./ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useState, useRef } from "react";
+import { Popover, PopoverContent } from "./ui/popover";
+import { cn } from "@/lib/utils";
 
 async function fetchSearchResults(query: string, type: 'search' | 'mentions') {
   if (!query) return [];
@@ -16,53 +16,74 @@ async function fetchSearchResults(query: string, type: 'search' | 'mentions') {
 interface AutocompleteProps {
   value: string;
   onChange: (value: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
+  textareaRef?: React.RefObject<HTMLTextAreaElement>;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
-export function Autocomplete({ value, onChange }: AutocompleteProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function Autocomplete({ 
+  value, 
+  onChange, 
+  onKeyDown,
+  textareaRef,
+  disabled,
+  placeholder = "Ask anything or type @ for mentions..."
+}: AutocompleteProps) {
+  const [manuallyOpen, setManuallyOpen] = useState(true);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const searchType = useMemo(() => {
-    return value.startsWith('@') ? 'mentions' : 'search';
-  }, [value]);
+  // Extract @ mention query
+  const mentionMatch = value.match(/@(\w*)$/);
+  const searchType = mentionMatch ? 'mentions' : 'search';
+  const query = mentionMatch ? mentionMatch[1] : value.trim();
 
-  const query = searchType === 'mentions' ? value.substring(1) : value;
-
-  const { data: results, isLoading, error } = useQuery({
+  const { data: results, isLoading } = useQuery({
     queryKey: [searchType, query],
     queryFn: () => fetchSearchResults(query, searchType),
-    enabled: query.length > 0,
+    enabled: query.length > 0 && (searchType === 'mentions' || value.length > 2),
     staleTime: 60000, // Cache for 1 minute
   });
 
-  // Compute if dropdown should be open (removed unused variable)
+  const hasResults = !!(results && results.length > 0 && query.length > 0);
+  const isOpen = hasResults && manuallyOpen;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const hasResults = !!(results && results.length > 0);
-    if (!hasResults || !isOpen || !results) return;
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setActiveIndex((prev) => (prev + 1) % results.length);
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setActiveIndex((prev) => (prev - 1 + results.length) % results.length);
-        break;
-      case "Enter":
-        if (activeIndex !== -1) {
+    
+    if (hasResults && isOpen) {
+      switch (e.key) {
+        case "ArrowDown":
           e.preventDefault();
-          const selectedValue = searchType === 'mentions' ? `@${results[activeIndex]}` : results[activeIndex];
-          onChange(selectedValue);
-          setIsOpen(false);
-        }
-        break;
-      case "Escape":
-        setIsOpen(false);
-        break;
+          setActiveIndex((prev) => (prev + 1) % results.length);
+          return;
+        case "ArrowUp":
+          e.preventDefault();
+          setActiveIndex((prev) => (prev - 1 + results.length) % results.length);
+          return;
+        case "Enter":
+          if (activeIndex !== -1) {
+            e.preventDefault();
+            if (searchType === 'mentions') {
+              const selectedValue = value.replace(/@\w*$/, `@${results[activeIndex]} `);
+              onChange(selectedValue);
+            } else {
+              onChange(results[activeIndex]);
+            }
+            setManuallyOpen(false);
+            return;
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setManuallyOpen(false);
+          return;
+      }
     }
+    
+    // Pass through to parent handler
+    onKeyDown?.(e);
   };
 
   const highlightMatch = (text: string, query: string) => {
@@ -77,66 +98,73 @@ export function Autocomplete({ value, onChange }: AutocompleteProps) {
     return (
       <>
         {before}
-        <strong className="font-bold text-white">{match}</strong>
+        <strong className="font-semibold text-foreground">{match}</strong>
         {after}
       </>
     );
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Input
-          ref={inputRef}
-          type="text"
-          placeholder="Ask anything or type @ for mentions..."
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="bg-neutral-950 border-neutral-800 focus:border-neutral-700 text-white placeholder:text-neutral-500"
-        />
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0 bg-neutral-950 border-neutral-800"
-        align="start"
-      >
-        {isLoading && (
-          <div className="p-3 text-sm text-neutral-500">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-neutral-700 border-t-white rounded-full animate-spin" />
-              Searching...
+    <div ref={containerRef} className="relative w-full">
+      <textarea
+        ref={textareaRef}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={disabled}
+        rows={1}
+        className={cn(
+          "w-full resize-none rounded-md bg-transparent px-4 py-3",
+          "text-sm leading-relaxed",
+          "placeholder:text-muted-foreground",
+          "focus:outline-none",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "max-h-[200px] overflow-y-auto"
+        )}
+      />
+      
+      {isOpen && results && results.length > 0 && (
+        <Popover open={isOpen} onOpenChange={setManuallyOpen}>
+          <PopoverContent 
+            className="w-full p-1 max-w-md"
+            align="start"
+            side="top"
+            sideOffset={8}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <div className="text-xs text-muted-foreground px-3 py-2 border-b">
+              {isLoading ? "Searching..." : `${results.length} result${results.length === 1 ? '' : 's'}`}
             </div>
-          </div>
-        )}
-        {error && (
-          <div className="p-3 text-sm text-red-400">
-            Error loading results
-          </div>
-        )}
-        {results && results.length > 0 && (
-          <ul className="max-h-60 overflow-y-auto">
-            {results.map((result: string, index: number) => (
-              <li
-                key={result}
-                className={`p-3 cursor-pointer transition-colors border-b border-neutral-900 last:border-b-0 ${
-                  index === activeIndex 
-                    ? "bg-neutral-900" 
-                    : "hover:bg-neutral-900/50"
-                }`}
-                onClick={() => {
-                  const selectedValue = searchType === 'mentions' ? `@${result}` : result;
-                  onChange(selectedValue);
-                  setIsOpen(false);
-                }}
-              >
-                <span className="text-sm text-neutral-300">
+            <ul className="max-h-60 overflow-y-auto">
+              {results.map((result: string, index: number) => (
+                <li
+                  key={result}
+                  className={cn(
+                    "px-3 py-2 cursor-pointer transition-colors text-sm rounded-md mx-1 my-0.5",
+                    index === activeIndex 
+                      ? "bg-accent text-accent-foreground" 
+                      : "hover:bg-accent/50"
+                  )}
+                  onClick={() => {
+                    if (searchType === 'mentions') {
+                      const selectedValue = value.replace(/@\w*$/, `@${result} `);
+                      onChange(selectedValue);
+                    } else {
+                      onChange(result);
+                    }
+                    setManuallyOpen(false);
+                  }}
+                  onMouseEnter={() => setActiveIndex(index)}
+                >
+                  {searchType === 'mentions' && <span className="text-muted-foreground mr-1">@</span>}
                   {highlightMatch(result, query)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </PopoverContent>
-    </Popover>
+                </li>
+              ))}
+            </ul>
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
   );
 }
