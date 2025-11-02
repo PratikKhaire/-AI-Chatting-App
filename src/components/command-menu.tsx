@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 import {
-  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
+import { PlusCircle, Trash2, Settings } from "lucide-react";
 
 interface CommandMenuProps {
   createNewSession: () => void;
@@ -38,17 +37,24 @@ export function CommandMenu({ createNewSession, clearHistory }: CommandMenuProps
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Type a command or search..." />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Actions">
-          <CommandItem onSelect={() => runCommand(createNewSession)}>
-            New Chat
+      <CommandInput placeholder="Type a command or search..." className="border-b border-neutral-800" />
+      <CommandList className="bg-neutral-950">
+        <CommandEmpty className="py-6 text-center text-sm text-neutral-500">
+          No results found.
+        </CommandEmpty>
+        <CommandGroup heading="Actions" className="text-neutral-400">
+          <CommandItem onSelect={() => runCommand(createNewSession)} className="cursor-pointer">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            <span>New Chat</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(clearHistory)}>
-            Clear History
+          <CommandItem onSelect={() => runCommand(clearHistory)} className="cursor-pointer">
+            <Trash2 className="mr-2 h-4 w-4" />
+            <span>Clear History</span>
           </CommandItem>
-          <CommandItem>Settings</CommandItem>
+          <CommandItem className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </CommandItem>
         </CommandGroup>
       </CommandList>
     </CommandDialog>

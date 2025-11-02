@@ -1,14 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Input } from "./ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 async function fetchSearchResults(query: string, type: 'search' | 'mentions') {
   if (!query) return [];
   const endpoint = type === 'search' ? 'search' : 'mentions';
-  const res = await fetch(`/api/${endpoint}?q=${query}`);
+  const res = await fetch(`/api/${endpoint}?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error('Search failed');
   return res.json();
 }
 
@@ -20,36 +21,26 @@ interface AutocompleteProps {
 export function Autocomplete({ value, onChange }: AutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [searchType, setSearchType] = useState<'search' | 'mentions'>('search');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (value.startsWith('@')) {
-      setSearchType('mentions');
-    } else {
-      setSearchType('search');
-    }
+  const searchType = useMemo(() => {
+    return value.startsWith('@') ? 'mentions' : 'search';
   }, [value]);
 
   const query = searchType === 'mentions' ? value.substring(1) : value;
 
-  const { data: results, isLoading } = useQuery({
+  const { data: results, isLoading, error } = useQuery({
     queryKey: [searchType, query],
     queryFn: () => fetchSearchResults(query, searchType),
     enabled: query.length > 0,
+    staleTime: 60000, // Cache for 1 minute
   });
 
-  useEffect(() => {
-    if (results && results.length > 0) {
-      setIsOpen(true);
-      setActiveIndex(-1);
-    } else {
-      setIsOpen(false);
-    }
-  }, [results]);
+  // Compute if dropdown should be open (removed unused variable)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen || !results) return;
+    const hasResults = !!(results && results.length > 0);
+    if (!hasResults || !isOpen || !results) return;
 
     switch (e.key) {
       case "ArrowDown":
@@ -62,6 +53,7 @@ export function Autocomplete({ value, onChange }: AutocompleteProps) {
         break;
       case "Enter":
         if (activeIndex !== -1) {
+          e.preventDefault();
           const selectedValue = searchType === 'mentions' ? `@${results[activeIndex]}` : results[activeIndex];
           onChange(selectedValue);
           setIsOpen(false);
@@ -74,6 +66,7 @@ export function Autocomplete({ value, onChange }: AutocompleteProps) {
   };
 
   const highlightMatch = (text: string, query: string) => {
+    if (!query) return text;
     const index = text.toLowerCase().indexOf(query.toLowerCase());
     if (index === -1) return text;
 
@@ -84,7 +77,7 @@ export function Autocomplete({ value, onChange }: AutocompleteProps) {
     return (
       <>
         {before}
-        <strong className="font-bold">{match}</strong>
+        <strong className="font-bold text-white">{match}</strong>
         {after}
       </>
     );
@@ -100,17 +93,35 @@ export function Autocomplete({ value, onChange }: AutocompleteProps) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
+          className="bg-neutral-950 border-neutral-800 focus:border-neutral-700 text-white placeholder:text-neutral-500"
         />
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        {isLoading && <div className="p-2">Loading...</div>}
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0 bg-neutral-950 border-neutral-800"
+        align="start"
+      >
+        {isLoading && (
+          <div className="p-3 text-sm text-neutral-500">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-neutral-700 border-t-white rounded-full animate-spin" />
+              Searching...
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="p-3 text-sm text-red-400">
+            Error loading results
+          </div>
+        )}
         {results && results.length > 0 && (
           <ul className="max-h-60 overflow-y-auto">
             {results.map((result: string, index: number) => (
               <li
                 key={result}
-                className={`p-2 cursor-pointer ${
-                  index === activeIndex ? "bg-gray-700" : "hover:bg-gray-800"
+                className={`p-3 cursor-pointer transition-colors border-b border-neutral-900 last:border-b-0 ${
+                  index === activeIndex 
+                    ? "bg-neutral-900" 
+                    : "hover:bg-neutral-900/50"
                 }`}
                 onClick={() => {
                   const selectedValue = searchType === 'mentions' ? `@${result}` : result;
@@ -118,7 +129,9 @@ export function Autocomplete({ value, onChange }: AutocompleteProps) {
                   setIsOpen(false);
                 }}
               >
-                {highlightMatch(result, query)}
+                <span className="text-sm text-neutral-300">
+                  {highlightMatch(result, query)}
+                </span>
               </li>
             ))}
           </ul>
