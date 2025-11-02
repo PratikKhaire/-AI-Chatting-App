@@ -42,20 +42,20 @@ export function Sidebar({
   }, {} as Record<string, ChatSession[]>);
 
   return (
-    <div className="w-[280px] h-full border-r bg-card/50 backdrop-blur-xl flex flex-col">
+    <div className="w-[280px] h-full border-r lovable-border bg-white/80 backdrop-blur-xl flex flex-col relative z-10">
       {/* Header */}
-      <div className="p-4 border-b bg-linear-to-b from-background/80 to-transparent">
+      <div className="p-4 border-b lovable-border bg-linear-to-b from-white/90 to-transparent">
         <Button 
           onClick={createNewSession} 
           className={cn(
-            "w-full gap-2 font-medium shadow-sm",
-            "bg-primary hover:bg-primary/90",
-            "transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+            "w-full gap-2.5 font-semibold shadow-lovable-lg",
+            "bg-primary hover:bg-primary/90 text-primary-foreground",
+            "transition-all duration-300 hover:shadow-glow-accent hover:scale-[1.02]",
+            "rounded-xl h-11"
           )}
-          size="lg"
         >
-          <Plus className="h-4 w-4" />
-          New Chat
+          <Plus className="h-4.5 w-4.5" />
+          <span>New Chat</span>
         </Button>
       </div>
 
@@ -74,20 +74,20 @@ export function Sidebar({
             </div>
           ) : (
             Object.entries(groupedSessions).map(([label, groupSessions]) => (
-              <div key={label} className="space-y-1">
-                <h3 className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <div key={label} className="space-y-1.5">
+                <h3 className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-widest gradient-text">
                   {label}
                 </h3>
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {groupSessions.map((session) => (
                     <button
                       key={session.id}
                       className={cn(
-                        "w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
-                        "hover:bg-accent/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "w-full text-left px-3.5 py-3 rounded-xl transition-all duration-300 group relative",
+                        "hover:bg-accent/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                         activeSession?.id === session.id
-                          ? "bg-accent text-accent-foreground shadow-sm"
-                          : "text-foreground/70 hover:text-foreground"
+                          ? "bg-accent/30 text-accent-foreground shadow-lovable lovable-border-accent"
+                          : "text-foreground/80 hover:text-foreground hover:shadow-lovable"
                       )}
                       onClick={() => switchSession(session.id)}
                     >

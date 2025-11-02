@@ -15,6 +15,7 @@ export interface ChatSessionState {
   createNewSession: () => void;
   switchSession: (sessionId: string) => void;
   addMessage: (message: Message) => void;
+  updateMessage: (messageId: string, updates: Partial<Message>) => void;
   clearHistory: () => void;
 }
 
@@ -89,5 +90,21 @@ export function useChatSessionState() {
     }
   };
 
-  return { sessions, activeSession, createNewSession, switchSession, addMessage, clearHistory };
+  const updateMessage = (messageId: string, updates: Partial<Message>) => {
+    if (activeSession) {
+      const updatedSession = {
+        ...activeSession,
+        messages: activeSession.messages.map((msg) =>
+          msg.id === messageId ? { ...msg, ...updates } : msg
+        ),
+      };
+      setSessions((prevSessions) =>
+        prevSessions.map((session) =>
+          session.id === activeSessionId ? updatedSession : session
+        )
+      );
+    }
+  };
+
+  return { sessions, activeSession, createNewSession, switchSession, addMessage, updateMessage, clearHistory };
 }

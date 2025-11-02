@@ -53,13 +53,13 @@ export function ChatInput({ addMessage, isLoading, disabled }: ChatInputProps) {
   };
 
   return (
-    <div className="border-t bg-background/95 backdrop-blur-xl supports-backdrop-filter:bg-background/80">
+    <div className="border-t lovable-border bg-white/95 backdrop-blur-xl supports-backdrop-filter:bg-white/90">
       <div className="mx-auto max-w-3xl px-4 py-6">
         <form onSubmit={handleSubmit} className="relative">
           <div className={cn(
-            "relative flex items-end gap-3 rounded-2xl border-2 bg-card/50 shadow-lg transition-all duration-200",
-            "focus-within:border-primary/50 focus-within:shadow-xl focus-within:shadow-primary/5",
-            "hover:border-border/80"
+            "relative flex items-end gap-3 rounded-2xl lovable-border glass-strong shadow-lovable-lg transition-all duration-300 bg-white",
+            "focus-within:lovable-border-accent focus-within:shadow-glow-accent focus-within:scale-[1.005]",
+            "hover:shadow-lovable-lg"
           )}>
             {/* Attach button */}
             <div className="p-3 pb-3">
@@ -67,7 +67,7 @@ export function ChatInput({ addMessage, isLoading, disabled }: ChatInputProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-xl hover:bg-muted/80 transition-colors"
+                className="h-10 w-10 rounded-xl hover:bg-accent/20 transition-all duration-300"
                 disabled={disabled || isLoading}
               >
                 <Paperclip className="h-5 w-5 text-muted-foreground" />
@@ -97,9 +97,9 @@ export function ChatInput({ addMessage, isLoading, disabled }: ChatInputProps) {
                 disabled={!input.trim() || isLoading || disabled}
                 size="icon"
                 className={cn(
-                  "h-9 w-9 rounded-xl transition-all duration-200",
+                  "h-10 w-10 rounded-xl transition-all duration-300",
                   input.trim() && !isLoading && !disabled
-                    ? "bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg hover:scale-105"
+                    ? "bg-primary hover:bg-primary/90 shadow-lovable-lg shadow-glow hover:shadow-glow-accent hover:scale-105"
                     : "bg-muted"
                 )}
               >
@@ -124,7 +124,7 @@ export function ChatInput({ addMessage, isLoading, disabled }: ChatInputProps) {
             <span>for new line</span>
           </div>
           {input.length > 0 && (
-            <span className="text-muted-foreground/70">
+            <span className="text-muted-foreground/70 font-medium gradient-text">
               {input.length} characters
             </span>
           )}

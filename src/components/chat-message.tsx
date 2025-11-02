@@ -45,18 +45,18 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
         return (
           <div key={index} className="my-4 group/code relative">
             <div className={cn(
-              "rounded-xl border overflow-hidden transition-all backdrop-blur-sm",
-              "bg-muted/30 border-border/50",
-              isExpanded ? "shadow-xl ring-2 ring-primary/10" : "shadow-sm"
+              "rounded-xl border overflow-hidden transition-all backdrop-blur-sm glass",
+              "border-border/50",
+              isExpanded ? "shadow-xl ring-2 ring-primary/10 shadow-glow" : "shadow-sm"
             )}>
               <div className="flex items-center justify-between bg-muted/50 px-4 py-2.5 border-b border-border/50">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-sm shadow-red-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/80 shadow-sm shadow-yellow-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-sm shadow-green-500/50" />
                   </div>
-                  <span className="text-xs font-mono text-muted-foreground ml-2">{language}</span>
+                  <span className="text-xs font-mono text-muted-foreground ml-2 tracking-wide">{language}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -97,34 +97,37 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
 
   return (
     <div className={cn(
-      "group relative py-6 px-4 sm:px-6 animate-fade-in-up",
-      isUser ? "bg-transparent" : "bg-muted/20"
+      "group relative py-8 px-4 sm:px-6 animate-fade-in-up transition-colors duration-300",
+      isUser ? "bg-transparent" : "bg-linear-to-br from-purple-50/30 via-white to-blue-50/20"
     )}>
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-3xl relative z-10">
         {/* Avatar and Name */}
         <div className="flex items-start gap-4">
           <div className={cn(
-            "flex items-center justify-center rounded-lg shrink-0",
-            "w-8 h-8 sm:w-9 sm:h-9",
+            "flex items-center justify-center rounded-xl shrink-0 transition-all duration-300",
+            "w-9 h-9 sm:w-10 sm:h-10",
             isUser 
-              ? "bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-lg shadow-primary/20" 
-              : "bg-gradient-to-br from-muted to-muted/50 text-foreground border border-border/50"
+              ? "bg-linear-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-lovable-lg hover:shadow-glow" 
+              : "bg-linear-to-br from-accent/20 via-accent/10 to-muted text-foreground lovable-border hover:shadow-lovable"
           )}>
             {isUser ? (
-              <User className="h-4 w-4 sm:h-5 sm:w-5" />
+              <User className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
             ) : (
-              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Sparkles className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
             )}
           </div>
 
           <div className="flex-1 space-y-2 min-w-0">
             {/* Header */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">
+            <div className="flex items-center gap-2.5">
+              <span className={cn(
+                "text-sm font-bold tracking-tight",
+                isUser ? "gradient-text-primary" : "gradient-text-accent"
+              )}>
                 {isUser ? "You" : "Assistant"}
               </span>
               {message.timestamp && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground/70">
                   {new Date(message.timestamp).toLocaleTimeString([], { 
                     hour: '2-digit', 
                     minute: '2-digit' 
@@ -147,16 +150,16 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
 
             {/* Action Buttons - Only for AI messages */}
             {!isUser && !message.isStreaming && (
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2">
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pt-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleCopy}
-                  className="h-8 px-3 text-xs gap-1.5 hover:bg-muted"
+                  className="h-8 px-3 text-xs gap-1.5 hover:bg-accent/10 rounded-lg transition-all duration-200"
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="h-3.5 w-3.5 text-primary" />
                       Copied
                     </>
                   ) : (
@@ -171,7 +174,7 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
                     variant="ghost"
                     size="sm"
                     onClick={onRegenerate}
-                    className="h-8 px-3 text-xs gap-1.5 hover:bg-muted"
+                    className="h-8 px-3 text-xs gap-1.5 hover:bg-accent/10 rounded-lg transition-all duration-200"
                   >
                     <RotateCw className="h-3.5 w-3.5" />
                     Regenerate
