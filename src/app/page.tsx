@@ -16,7 +16,7 @@ import { StickyQuestionHeader } from "@/components/sticky-question-header";
 export default function Home() {
   const chatSession = useContext(ChatSessionContext);
   const [isLoading, setIsLoading] = useState(false);
-  const [stickyQuestion, setStickyQuestion] = useState<{isVisible: boolean; question: string}>({
+  const [stickyQuestion] = useState<{isVisible: boolean; question: string}>({
     isVisible: false,
     question: ""
   });
@@ -43,7 +43,8 @@ export default function Home() {
     
     addMessage(aiResponse);
     
-    // Generate contextual response based on the question
+    // TODO: Replace with real AI API integration
+    // This will be replaced with actual API calls to OpenAI, Anthropic, or other AI services
     let fullResponse = "";
     const question = message.content.toLowerCase();
     
@@ -180,9 +181,6 @@ Feel free to ask me anything else!`;
                 messages={activeSession.messages}
                 onRegenerate={(id) => console.log("Regenerate:", id)}
                 onEdit={(id, content) => console.log("Edit:", id, content)}
-                onQuestionVisibilityChange={(isVisible, question) => {
-                  setStickyQuestion({ isVisible, question });
-                }}
               />
               {isLoading && <ThinkingLoader />}
             </ScrollArea>

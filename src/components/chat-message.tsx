@@ -98,7 +98,7 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
   return (
     <div className={cn(
       "group relative py-8 px-4 sm:px-6 animate-fade-in-up transition-colors duration-300",
-      isUser ? "bg-transparent" : "bg-linear-to-br from-purple-50/30 via-white to-blue-50/20"
+      isUser ? "bg-transparent" : "bg-muted/30"
     )}>
       <div className="mx-auto max-w-3xl relative z-10">
         {/* Avatar and Name */}
@@ -107,8 +107,8 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
             "flex items-center justify-center rounded-xl shrink-0 transition-all duration-300",
             "w-9 h-9 sm:w-10 sm:h-10",
             isUser 
-              ? "bg-linear-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-lovable-lg hover:shadow-glow" 
-              : "bg-linear-to-br from-accent/20 via-accent/10 to-muted text-foreground lovable-border hover:shadow-lovable"
+              ? "bg-primary text-primary-foreground shadow-sm" 
+              : "bg-muted text-foreground border border-border"
           )}>
             {isUser ? (
               <User className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
@@ -120,14 +120,11 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
           <div className="flex-1 space-y-2 min-w-0">
             {/* Header */}
             <div className="flex items-center gap-2.5">
-              <span className={cn(
-                "text-sm font-bold tracking-tight",
-                isUser ? "gradient-text-primary" : "gradient-text-accent"
-              )}>
+              <span className="text-sm font-bold tracking-tight text-foreground">
                 {isUser ? "You" : "Assistant"}
               </span>
               {message.timestamp && (
-                <span className="text-xs text-muted-foreground/70">
+                <span className="text-xs text-muted-foreground">
                   {new Date(message.timestamp).toLocaleTimeString([], { 
                     hour: '2-digit', 
                     minute: '2-digit' 
@@ -137,7 +134,7 @@ export function ChatMessage({ message, onRegenerate, onEdit }: ChatMessageProps)
             </div>
 
             {/* Content */}
-            <div className="text-foreground/90">
+            <div className="text-foreground">
               {message.isStreaming ? (
                 <span className="inline-flex items-center gap-1">
                   <span className="text-[15px] leading-7">{message.content}</span>

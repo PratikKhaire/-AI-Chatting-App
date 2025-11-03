@@ -10,7 +10,7 @@ interface ChatMessagesProps {
   onQuestionVisibilityChange?: (isVisible: boolean, question: string) => void;
 }
 
-export function ChatMessages({ messages, onRegenerate, onEdit, onQuestionVisibilityChange }: ChatMessagesProps) {
+export function ChatMessages({ messages, onRegenerate, onEdit }: ChatMessagesProps) {
   if (messages.length === 0) {
     return null;
   }
@@ -23,7 +23,6 @@ export function ChatMessages({ messages, onRegenerate, onEdit, onQuestionVisibil
           message={message}
           onRegenerate={onRegenerate ? () => onRegenerate(message.id) : undefined}
           onEdit={onEdit ? (content) => onEdit(message.id, content) : undefined}
-          onVisibilityChange={onQuestionVisibilityChange}
         />
       ))}
     </div>

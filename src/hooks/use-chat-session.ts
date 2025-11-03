@@ -77,42 +77,47 @@ export function useChatSessionState() {
   const activeSession = sessions.find((session) => session.id === activeSessionId);
 
   const addMessage = (message: Message) => {
-    if (activeSession) {
-      const updatedSession = {
-        ...activeSession,
-        messages: [...activeSession.messages, message],
-      };
-      setSessions((prevSessions) =>
-        prevSessions.map((session) =>
+    setSessions((prevSessions) => {
+      const currentActiveSession = prevSessions.find((session) => session.id === activeSessionId);
+      
+      if (currentActiveSession) {
+        const updatedSession = {
+          ...currentActiveSession,
+          messages: [...currentActiveSession.messages, message],
+        };
+        return prevSessions.map((session) =>
           session.id === activeSessionId ? updatedSession : session
-        )
-      );
-    } else {
-      // If no active session, create one automatically
-      const newSession: ChatSession = {
-        id: Date.now().toString(),
-        title: 'New Chat',
-        messages: [message],
-      };
-      setSessions((prevSessions) => [...prevSessions, newSession]);
-      setActiveSessionId(newSession.id);
-    }
+        );
+      } else {
+        // If no active session, create one automatically
+        const newSession: ChatSession = {
+          id: Date.now().toString(),
+          title: 'New Chat',
+          messages: [message],
+        };
+        setActiveSessionId(newSession.id);
+        return [...prevSessions, newSession];
+      }
+    });
   };
 
   const updateMessage = (messageId: string, updates: Partial<Message>) => {
-    if (activeSession) {
-      const updatedSession = {
-        ...activeSession,
-        messages: activeSession.messages.map((msg) =>
-          msg.id === messageId ? { ...msg, ...updates } : msg
-        ),
-      };
-      setSessions((prevSessions) =>
-        prevSessions.map((session) =>
+    setSessions((prevSessions) => {
+      const currentActiveSession = prevSessions.find((session) => session.id === activeSessionId);
+      
+      if (currentActiveSession) {
+        const updatedSession = {
+          ...currentActiveSession,
+          messages: currentActiveSession.messages.map((msg) =>
+            msg.id === messageId ? { ...msg, ...updates } : msg
+          ),
+        };
+        return prevSessions.map((session) =>
           session.id === activeSessionId ? updatedSession : session
-        )
-      );
-    }
+        );
+      }
+      return prevSessions;
+    });
   };
 
   return { sessions, activeSession, createNewSession, switchSession, addMessage, updateMessage, clearHistory };
