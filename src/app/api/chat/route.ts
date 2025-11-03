@@ -17,45 +17,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'GEMINI_API_KEY is not configured. Please add it to your .env.local file.' },
+        { status: 500 }
+      );
+    }
+
     const lastMessage = messages[messages.length - 1];
     const userPrompt = lastMessage.content;
 
-    const responseParts = [
-      `I understand you're asking about: "${userPrompt}"\n\n`,
-      `Let me help you with this. First, let me analyze what you're looking for:\n\n`,
-      `Based on your query, here's a comprehensive response:\n\n`,
-      `## Key Insights\n\nThe main aspects of your question involve understanding the core concepts and practical applications. Let me break this down for you:\n\n`,
-      `### Technical Analysis\n\nHere's a code example that demonstrates the key concepts:\n\n`,
-      `\`\`\`typescript
-function analyzeQuery(prompt: string): AnalysisResult {
-  const keywords = extractKeywords(prompt);
-  const intent = determineIntent(prompt);
+    // Use Gemini 2.5 Flash - stable model available with your API key
+    const model = 'gemini-2.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    
+    const geminiResponse = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: userPrompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        }
+      })
+    });
 
-  return {
-    keywords,
-    intent,
-    confidence: calculateConfidence(keywords, intent),
-    suggestions: generateSuggestions(prompt)
-  };
-}
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      console.error('Gemini API error:', errorData);
+      return NextResponse.json(
+        { 
+          error: errorData.error?.message || 'Failed to get response from AI'
+        },
+        { status: geminiResponse.status }
+      );
+    }
 
-// Example usage
-const result = analyzeQuery("${userPrompt}");
-console.log("Analysis result:", result);
-\`\`\`\n\n`,
-      `### Implementation Details\n\nThis approach helps break down complex queries into manageable components:\n\n1. **Keyword Extraction**: Identifies the main concepts in your query\n2. **Intent Analysis**: Determines what you're trying to achieve\n3. **Confidence Scoring**: Measures how relevant the response is\n4. **Suggestion Generation**: Provides related topics or follow-up questions\n\n`,
-      `## Practical Applications\n\nYou can use this pattern in various scenarios:\n\n- **Code Analysis**: Understanding complex codebases\n- **Documentation**: Generating technical documentation\n- **Problem Solving**: Breaking down complex problems\n- **Learning**: Building educational content\n\n`,
-      `## Best Practices\n\nWhen working with AI assistants, consider these best practices:\n\n1. **Be Specific**: Clear, specific prompts yield better results\n2. **Iterate**: Refine your questions based on initial responses\n3. **Verify**: Always validate AI-generated code and information\n4. **Learn**: Use responses as learning opportunities\n\n`,
-      `## Next Steps\n\nBased on our conversation, you might want to:\n\n- Explore specific technical implementations\n- Dive deeper into particular concepts\n- Try the provided code examples\n- Ask follow-up questions for clarification\n\nLet me know if you'd like me to elaborate on any of these points!\n\nThis should give you a solid foundation for understanding "${userPrompt}". Feel free to ask if you need more specific details or examples!`
-    ];
+    const data = await geminiResponse.json();
+    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
 
+    // Stream the response word by word
+    const words = aiText.split(' ');
+    
     const responseStream = new ReadableStream({
       async start(controller) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        for (const part of responseParts) {
-          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: part })}\n\n`));
-          await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+        for (let i = 0; i < words.length; i++) {
+          const chunk = (i === 0 ? words[i] : ' ' + words[i]);
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+          await new Promise(resolve => setTimeout(resolve, 30));
         }
 
         controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true })}\n\n`));

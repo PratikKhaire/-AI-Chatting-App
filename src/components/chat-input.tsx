@@ -15,7 +15,7 @@ interface ChatInputProps {
 
 export function ChatInput({ addMessage, isLoading, disabled }: ChatInputProps) {
   const [input, setInput] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null!);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

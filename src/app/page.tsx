@@ -27,10 +27,10 @@ export default function Home() {
   
   const { sessions, activeSession, createNewSession, switchSession, addMessage, updateMessage, clearHistory } = chatSession;
 
-  const handleSendMessage = (message: Message) => {
+  const handleSendMessage = async (message: Message) => {
     addMessage(message);
     
-    // Simulate AI response with streaming
+    // Create AI response placeholder
     setIsLoading(true);
     
     const aiResponse: Message = {
@@ -43,93 +43,60 @@ export default function Home() {
     
     addMessage(aiResponse);
     
-    // TODO: Replace with real AI API integration
-    // This will be replaced with actual API calls to OpenAI, Anthropic, or other AI services
-    let fullResponse = "";
-    const question = message.content.toLowerCase();
-    
-    if (question.includes("pi") || question.includes("π")) {
-      fullResponse = `The value of pi (π) is approximately **3.14159265359**.
+    try {
+      // Call the Gemini API via our backend
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...(activeSession?.messages || []), message]
+        }),
+      });
 
-Pi is a mathematical constant representing the ratio of a circle's circumference to its diameter. It's an irrational number, meaning it has an infinite number of decimal places without repeating.
-
-Here are some interesting facts about pi:
-- It's been calculated to over 31 trillion digits
-- The first 10 digits: 3.1415926535
-- Pi Day is celebrated on March 14th (3/14)
-
-In programming, you can use pi like this:
-
-\`\`\`javascript
-const pi = Math.PI;
-console.log(pi); // 3.141592653589793
-
-// Calculate circle area
-const radius = 5;
-const area = pi * radius * radius;
-console.log(\`Area: \${area}\`); // Area: 78.53981633974483
-\`\`\``;
-    } else if (question.includes("hello") || question.includes("hi")) {
-      fullResponse = `Hello! 👋 I'm your AI assistant. I'm here to help you with:
-
-- Programming and coding questions
-- Technical explanations
-- Problem solving
-- Data analysis
-- And much more!
-
-How can I assist you today?`;
-    } else if (question.includes("code") || question.includes("function")) {
-      fullResponse = `I can help you with coding! Here's an example function:
-
-\`\`\`typescript
-function calculateSum(numbers: number[]): number {
-  return numbers.reduce((sum, num) => sum + num, 0);
-}
-
-// Usage
-const numbers = [1, 2, 3, 4, 5];
-const total = calculateSum(numbers);
-console.log(total); // 15
-\`\`\`
-
-This function takes an array of numbers and returns their sum. Would you like me to explain any specific programming concept?`;
-    } else {
-      fullResponse = `I understand you're asking about: "${message.content}"
-
-This is a simulated response. In a production environment, this would connect to a real AI API like OpenAI's GPT-4, Claude, or similar services.
-
-Here's a code example related to API integration:
-
-\`\`\`typescript
-async function callAI(prompt: string) {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: prompt })
-  });
-  
-  return await response.json();
-}
-\`\`\`
-
-Feel free to ask me anything else!`;
-    }
-    
-    let currentIndex = 0;
-    const words = fullResponse.split(' ');
-    
-    const streamInterval = setInterval(() => {
-      if (currentIndex < words.length) {
-        const updatedContent = words.slice(0, currentIndex + 1).join(' ');
-        updateMessage(aiResponse.id, { content: updatedContent });
-        currentIndex++;
-      } else {
-        clearInterval(streamInterval);
-        updateMessage(aiResponse.id, { isStreaming: false });
-        setIsLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
       }
-    }, 50);
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        let fullContent = '';
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.done) {
+                updateMessage(aiResponse.id, { isStreaming: false });
+                setIsLoading(false);
+              } else if (data.content) {
+                fullContent += data.content;
+                updateMessage(aiResponse.id, { content: fullContent });
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      updateMessage(aiResponse.id, {
+        content: `❌ Error: ${error instanceof Error ? error.message : 'Failed to get response'}. Please check your GEMINI_API_KEY in .env.local file.`,
+        isStreaming: false
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
